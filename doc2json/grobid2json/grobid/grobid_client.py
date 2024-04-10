@@ -6,6 +6,7 @@ import time
 import glob
 from doc2json.grobid2json.grobid.client import ApiClient
 import ntpath
+from multiprocessing import Pool, cpu_count
 from typing import List
 
 '''
@@ -61,8 +62,10 @@ class GrobidClient(ApiClient):
 
     def process_batch(self, pdf_files: List[str], output: str, service: str) -> None:
         print(len(pdf_files), "PDF files to process")
-        for pdf_file in pdf_files:
-            self.process_pdf(pdf_file, output, service)
+        pool = Pool(self.max_workers)
+        pool.starmap(self.process_pdf, [(pdf_file, output, service) for pdf_file in pdf_files])
+        pool.close()
+        pool.join()
 
     def process_pdf_stream(self, pdf_file: str, pdf_strm: bytes, output: str, service: str) -> str:
         # process the stream
